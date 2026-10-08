@@ -1,0 +1,25 @@
+# Virtual environment
+.venv/
+
+# Environment variables (JANGAN commit OPENAI_API_KEY)
+.env
+
+# Cache OpenAI — tidak perlu di server (bisa rebuild)
+openai_api_cache.json
+
+# Log TinyTroupe
+tinytroupe.*.log
+
+# Output interview/test
+output/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# macOS
+.DS_Store
+
+# Transkrip & notes klien — DATA SENSITIF, TIDAK MASUK REPO PUBLIK
+personas/sources/

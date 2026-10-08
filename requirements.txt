@@ -1,0 +1,10 @@
+Flask==3.1.3
+python-dotenv==1.2.4
+gunicorn==23.0.0
+openai==2.54.0
+tiktoken==0.14.0
+chevron==0.14.0
+requests==2.34.2
+requests-file==3.0.1
+# TinyTroupe dari GitHub (versi pinned ke commit yang sudah ditest)
+tinytroupe @ git+https://github.com/microsoft/TinyTroupe.git@a6244b358a1fe1c71bf751f7ba0f8dfa368ec5a4

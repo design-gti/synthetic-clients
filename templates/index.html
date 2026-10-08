@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Synthetic Klien · Talentlytica</title>
+<style>
+  :root {
+    --bg:        #0c0c1e;
+    --bg2:       #111128;
+    --surface:   #181830;
+    --surface2:  #1e1e3a;
+    --border:    rgba(255,255,255,0.07);
+    --accent:    #7c6bf0;
+    --accent2:   #a78bfa;
+    --text:      #e8e8f8;
+    --text-sub:  #7070a0;
+    --text-dim:  #4a4a70;
+    --user-bg:   linear-gradient(135deg,#7c6bf0,#a78bfa);
+    --think-bg:  rgba(124,107,240,0.08);
+    --think-border: rgba(124,107,240,0.25);
+    --think-text: #a78bfa;
+    --done-bg:   rgba(52,211,153,0.1);
+    --done-text: #34d399;
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.4);
+    --shadow:    0 2px 8px rgba(0,0,0,0.3);
+    --radius:    16px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+    background: var(--bg); color: var(--text);
+    height: 100dvh; display: flex; overflow: hidden;
+    font-size: 14px;
+  }
+
+  /* ═══════════════════════════════════════════
+     LEFT SIDEBAR — persona list
+  ═══════════════════════════════════════════ */
+  .sidebar {
+    width: 280px; flex-shrink: 0;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .sidebar-head {
+    padding: 24px 20px 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .sidebar-head h1 {
+    font-size: 13px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-sub); margin-bottom: 4px;
+  }
+  .sidebar-head p {
+    font-size: 11px; color: var(--text-dim);
+  }
+  .sidebar-section-label {
+    padding: 12px 20px 6px;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-dim); flex-shrink: 0;
+  }
+  .persona-list { flex: 1; overflow-y: auto; padding: 4px 10px 16px; }
+  .persona-list::-webkit-scrollbar { width: 4px; }
+  .persona-list::-webkit-scrollbar-track { background: transparent; }
+  .persona-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .pitem {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 12px; border-radius: 14px;
+    cursor: pointer; transition: background 0.15s;
+    position: relative; margin-bottom: 2px;
+  }
+  .pitem:hover { background: var(--surface); }
+  .pitem.active { background: var(--surface2); }
+  .pitem-avatar {
+    width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 700; color: #fff;
+    position: relative;
+  }
+  .pitem-avatar::after {
+    content: ''; position: absolute;
+    inset: -2px; border-radius: 50%;
+    border: 2px solid transparent;
+    transition: border-color 0.15s;
+  }
+  .pitem.active .pitem-avatar::after { border-color: var(--accent); }
+  .pitem-info { flex: 1; min-width: 0; }
+  .pitem-name { font-weight: 600; font-size: 13.5px; }
+  .pitem-company { font-size: 11.5px; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+  .pitem-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent); flex-shrink: 0;
+    display: none; box-shadow: 0 0 6px var(--accent);
+  }
+  .pitem.has-unread .pitem-dot { display: block; }
+
+  .sidebar-footer {
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+    font-size: 11px; color: var(--text-dim);
+    flex-shrink: 0; line-height: 1.5;
+  }
+  .sidebar-footer strong { color: var(--text-sub); }
+
+  /* ═══════════════════════════════════════════
+     CENTER — chat area
+  ═══════════════════════════════════════════ */
+  .chat-area {
+    flex: 1; display: flex; flex-direction: column;
+    min-width: 0; background: var(--bg);
+  }
+
+  .chat-header {
+    background: var(--bg2); border-bottom: 1px solid var(--border);
+    padding: 14px 20px;
+    display: flex; align-items: center; gap: 14px;
+    flex-shrink: 0;
+  }
+  .chat-header-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 700; color: #fff; flex-shrink: 0;
+    box-shadow: 0 0 0 2px var(--bg2), 0 0 0 4px var(--accent);
+  }
+  .chat-header-info { flex: 1; min-width: 0; }
+  .chat-header-name {
+    font-weight: 700; font-size: 15px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .synthetic-badge {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; background: rgba(124,107,240,0.2);
+    color: var(--accent2); border-radius: 6px; padding: 2px 7px;
+  }
+  .chat-header-sub { font-size: 12px; color: var(--text-sub); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .btn-reset {
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text-sub); padding: 7px 14px;
+    border-radius: 10px; font-size: 12px; cursor: pointer;
+    font-family: inherit; transition: all 0.15s; flex-shrink: 0;
+  }
+  .btn-reset:hover { background: var(--surface2); color: var(--text); }
+
+  /* rooms */
+  .rooms { flex: 1; min-height: 0; position: relative; }
+  .room {
+    position: absolute; inset: 0;
+    overflow-y: auto; padding: 20px;
+    display: none; flex-direction: column; gap: 12px;
+    scroll-behavior: smooth;
+  }
+  .room::-webkit-scrollbar { width: 4px; }
+  .room::-webkit-scrollbar-track { background: transparent; }
+  .room::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  .room.active { display: flex; }
+
+  /* welcome */
+  .welcome {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 40px 20px;
+    gap: 12px;
+  }
+  .welcome-avatar {
+    width: 72px; height: 72px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; font-weight: 700; color: #fff;
+    box-shadow: 0 0 0 4px var(--bg), 0 0 0 7px var(--accent), var(--shadow-lg);
+    margin-bottom: 4px;
+  }
+  .welcome h2 { font-size: 18px; font-weight: 700; }
+  .welcome p { font-size: 13px; color: var(--text-sub); max-width: 420px; line-height: 1.7; }
+  .suggestions {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    justify-content: center; margin-top: 8px; max-width: 560px;
+  }
+  .suggestion-chip {
+    background: var(--surface); color: var(--text-sub);
+    border: 1px solid var(--border); border-radius: 20px;
+    padding: 7px 14px; font-size: 12.5px; cursor: pointer;
+    transition: all 0.15s; font-family: inherit;
+  }
+  .suggestion-chip:hover {
+    background: var(--surface2); border-color: var(--accent);
+    color: var(--accent2);
+  }
+
+  /* messages */
+  .msg { display: flex; gap: 10px; }
+  .msg.user { flex-direction: row-reverse; align-self: flex-end; max-width: 80%; }
+  .msg.agent { align-self: flex-start; max-width: 88%; }
+  .msg-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: #fff;
+    flex-shrink: 0; margin-top: 2px;
+  }
+  .msg.user .msg-avatar { background: var(--surface2); color: var(--text-sub); }
+  .msg-body { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+
+  .bubble {
+    padding: 11px 16px; border-radius: 18px;
+    font-size: 14px; line-height: 1.65; word-break: break-word;
+  }
+  .bubble-talk {
+    background: var(--surface2); color: var(--text);
+    border-bottom-left-radius: 5px;
+  }
+  .bubble-user {
+    background: var(--user-bg); color: #fff;
+    border-bottom-right-radius: 5px;
+    align-self: flex-end;
+    box-shadow: 0 4px 16px rgba(124,107,240,0.35);
+  }
+  .bubble-think {
+    background: var(--think-bg);
+    border: 1px solid var(--think-border);
+    border-radius: 12px; padding: 9px 13px;
+    font-size: 12.5px; color: var(--think-text);
+    cursor: pointer; user-select: none;
+  }
+  .think-header {
+    font-size: 10.5px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    margin-bottom: 4px; opacity: 0.7;
+  }
+  .think-body { display: none; white-space: pre-wrap; font-style: italic; margin-top: 4px; }
+  .think-preview { font-style: italic; opacity: 0.85; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .bubble-think.expanded .think-body { display: block; }
+  .bubble-think.expanded .think-preview { display: none; }
+
+  .badge-done {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--done-bg); color: var(--done-text);
+    border-radius: 20px; padding: 4px 11px;
+    font-size: 11px; font-weight: 700; align-self: flex-start;
+  }
+
+  /* typing indicator */
+  .typing-row { display: flex; gap: 10px; align-self: flex-start; }
+  .typing-bubble {
+    background: var(--surface2); border-radius: 18px;
+    border-bottom-left-radius: 5px; padding: 12px 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .dots { display: flex; gap: 5px; }
+  .dots span {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--text-sub); animation: bounce 1.2s infinite;
+  }
+  .dots span:nth-child(2) { animation-delay: 0.2s; }
+  .dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.6; }
+    30% { transform: translateY(-5px); opacity: 1; }
+  }
+  .typing-label { font-size: 12px; color: var(--text-sub); }
+
+  /* input footer */
+  .chat-footer {
+    background: var(--bg2); border-top: 1px solid var(--border);
+    padding: 14px 20px; display: flex; gap: 10px; align-items: flex-end;
+    flex-shrink: 0;
+  }
+  textarea {
+    flex: 1; resize: none;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 11px 16px;
+    font-size: 14px; font-family: inherit; line-height: 1.5;
+    max-height: 140px; color: var(--text); outline: none;
+    transition: border-color 0.2s;
+  }
+  textarea:focus { border-color: rgba(124,107,240,0.5); }
+  textarea::placeholder { color: var(--text-dim); }
+  .btn-send {
+    width: 44px; height: 44px; border-radius: 14px; border: none;
+    background: linear-gradient(135deg, #7c6bf0, #a78bfa);
+    color: #fff; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: opacity 0.15s, transform 0.1s;
+    box-shadow: 0 4px 14px rgba(124,107,240,0.4);
+  }
+  .btn-send:hover:not(:disabled) { opacity: 0.9; transform: scale(1.05); }
+  .btn-send:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+  .btn-send svg { width: 18px; height: 18px; }
+
+  /* ═══════════════════════════════════════════
+     RIGHT PANEL — persona profile
+  ═══════════════════════════════════════════ */
+  .profile-panel {
+    width: 268px; flex-shrink: 0;
+    background: var(--bg2); border-left: 1px solid var(--border);
+    display: flex; flex-direction: column; overflow-y: auto;
+    padding: 24px 18px;
+    gap: 20px;
+  }
+  .profile-panel::-webkit-scrollbar { width: 4px; }
+  .profile-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .profile-top { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .profile-avatar-wrap { position: relative; }
+  .profile-avatar {
+    width: 76px; height: 76px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; font-weight: 700; color: #fff;
+    box-shadow: 0 0 0 3px var(--bg2), 0 0 0 5px var(--accent);
+  }
+  .profile-name { font-size: 16px; font-weight: 700; }
+  .profile-role { font-size: 12px; color: var(--text-sub); line-height: 1.5; }
+
+  .profile-section { display: flex; flex-direction: column; gap: 8px; }
+  .profile-section-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text-dim);
+    padding-bottom: 4px; border-bottom: 1px solid var(--border);
+  }
+  .profile-row {
+    display: flex; gap: 8px; align-items: flex-start;
+  }
+  .profile-icon {
+    font-size: 13px; margin-top: 1px; flex-shrink: 0; width: 18px; text-align: center;
+  }
+  .profile-text { font-size: 12.5px; color: var(--text-sub); line-height: 1.6; }
+  .profile-text strong { color: var(--text); font-weight: 600; }
+
+  .pain-tag {
+    background: rgba(124,107,240,0.12); border: 1px solid rgba(124,107,240,0.2);
+    border-radius: 8px; padding: 6px 10px;
+    font-size: 11.5px; color: var(--accent2); line-height: 1.5;
+  }
+
+  .disclaimer-bar {
+    background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.15);
+    border-radius: 10px; padding: 9px 12px;
+    font-size: 11px; color: #d4a017; line-height: 1.5;
+    margin-top: auto;
+  }
+</style>
+</head>
+<body>
+
+<!-- LEFT: persona list -->
+<aside class="sidebar">
+  <div class="sidebar-head">
+    <h1>Synthetic Klien</h1>
+    <p>Talentlytica User Research</p>
+  </div>
+  <div class="sidebar-section-label">Persona</div>
+  <div class="persona-list" id="personaList"></div>
+  <div class="sidebar-footer">
+    <strong>TinyTroupe</strong> + GPT · Directional only.<br>
+    Validasi ke klien nyata.
+  </div>
+</aside>
+
+<!-- CENTER: chat -->
+<main class="chat-area">
+  <header class="chat-header">
+    <div class="chat-header-avatar" id="headAvatar"></div>
+    <div class="chat-header-info">
+      <div class="chat-header-name">
+        <span id="headName">Pilih persona</span>
+        <span class="synthetic-badge">Synthetic</span>
+      </div>
+      <div class="chat-header-sub" id="headTitle">—</div>
+    </div>
+    <button class="btn-reset" onclick="resetRoom()">↺ Mulai ulang</button>
+  </header>
+
+  <div class="rooms" id="rooms"></div>
+
+  <footer class="chat-footer">
+    <textarea id="input" rows="1" placeholder="Ketik pertanyaan…"
+      onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+    <button class="btn-send" id="sendBtn" onclick="sendMessage()" title="Kirim">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+      </svg>
+    </button>
+  </footer>
+</main>
+
+<!-- RIGHT: profile panel -->
+<aside class="profile-panel" id="profilePanel">
+  <div style="color:var(--text-dim);font-size:13px;text-align:center;margin:auto">
+    Pilih persona untuk melihat detail profil.
+  </div>
+</aside>
+
+<script>
+  let PERSONAS = [];
+  let current = null;
+  const busy = {};
+  const sessionIds = {};
+
+  // ── Init ──────────────────────────────────────────────────
+  async function init() {
+    const res = await fetch("/api/personas");
+    PERSONAS = await res.json();
+
+    const list = document.getElementById("personaList");
+    const rooms = document.getElementById("rooms");
+
+    for (const p of PERSONAS) {
+      let sid = sessionStorage.getItem("sid_" + p.id);
+      if (!sid) { sid = crypto.randomUUID(); sessionStorage.setItem("sid_" + p.id, sid); }
+      sessionIds[p.id] = sid;
+      busy[p.id] = false;
+
+      // sidebar item
+      const item = document.createElement("div");
+      item.className = "pitem";
+      item.id = "tab-" + p.id;
+      item.innerHTML = `
+        <div class="pitem-avatar" style="background:${p.color}">${p.initial}</div>
+        <div class="pitem-info">
+          <div class="pitem-name">${escHtml(p.name)}</div>
+          <div class="pitem-company">${escHtml(p.company || p.title)}</div>
+        </div>
+        <div class="pitem-dot"></div>`;
+      item.onclick = () => switchRoom(p.id);
+      list.appendChild(item);
+
+      // room
+      const room = document.createElement("div");
+      room.className = "room";
+      room.id = "room-" + p.id;
+      room.style.setProperty("--pcolor", p.color);
+      room.appendChild(makeWelcome(p));
+      rooms.appendChild(room);
+    }
+
+    switchRoom(sessionStorage.getItem("active_persona") || PERSONAS[0].id);
+  }
+
+  function makeWelcome(p) {
+    const div = document.createElement("div");
+    div.className = "welcome";
+    div.innerHTML = `
+      <div class="welcome-avatar" style="background:${p.color}">${p.initial}</div>
+      <h2>Interview dengan ${escHtml(p.name)}</h2>
+      <p>${escHtml(p.desc)}</p>
+      <div class="suggestions">
+        ${p.suggestions.map(s =>
+          `<div class="suggestion-chip" onclick="useSuggestion(${JSON.stringify(s)})">
+            ${escHtml(s.length > 60 ? s.substring(0,60)+'…' : s)}
+          </div>`).join("")}
+      </div>`;
+    return div;
+  }
+
+  // ── Switch room ───────────────────────────────────────────
+  function switchRoom(pid) {
+    current = pid;
+    sessionStorage.setItem("active_persona", pid);
+    const p = PERSONAS.find(x => x.id === pid);
+
+    document.querySelectorAll(".pitem").forEach(t => t.classList.remove("active"));
+    const item = document.getElementById("tab-" + pid);
+    item.classList.add("active");
+    item.classList.remove("has-unread");
+
+    document.querySelectorAll(".room").forEach(r => r.classList.remove("active"));
+    const room = document.getElementById("room-" + pid);
+    room.classList.add("active");
+    room.scrollTop = room.scrollHeight;
+
+    // header
+    const ha = document.getElementById("headAvatar");
+    ha.textContent = p.initial;
+    ha.style.background = p.color;
+    ha.style.boxShadow = `0 0 0 3px var(--bg2), 0 0 0 5px ${p.color}`;
+    document.getElementById("headName").textContent = p.name;
+    document.getElementById("headTitle").textContent = p.title;
+    document.getElementById("sendBtn").disabled = !!busy[pid];
+    document.getElementById("input").placeholder = "Tanya " + p.name + "…";
+    document.getElementById("input").focus();
+
+    // profile panel
+    renderProfile(p);
+  }
+
+  function renderProfile(p) {
+    const panel = document.getElementById("profilePanel");
+    panel.innerHTML = `
+      <div class="profile-top">
+        <div class="profile-avatar-wrap">
+          <div class="profile-avatar" style="background:${p.color};box-shadow:0 0 0 3px var(--bg2),0 0 0 5px ${p.color}">${p.initial}</div>
+        </div>
+        <div class="profile-name">${escHtml(p.name)}</div>
+        <div class="profile-role">${escHtml(p.title)}</div>
+      </div>
+
+      <div class="profile-section">
+        <div class="profile-section-label">Detail</div>
+        ${p.profile_rows ? p.profile_rows.map(r =>
+          `<div class="profile-row">
+            <div class="profile-icon">${r.icon}</div>
+            <div class="profile-text">${escHtml(r.text)}</div>
+          </div>`).join("") : ""}
+      </div>
+
+      ${p.pain_points && p.pain_points.length ? `
+      <div class="profile-section">
+        <div class="profile-section-label">Pain Points</div>
+        ${p.pain_points.map(pt => `<div class="pain-tag">${escHtml(pt)}</div>`).join("")}
+      </div>` : ""}
+
+      <div class="disclaimer-bar">
+        ⚠️ Synthetic persona — directional insight saja.<br>
+        Validasi ke klien nyata.
+      </div>`;
+  }
+
+  // ── Rendering ─────────────────────────────────────────────
+  function roomEl(pid) { return document.getElementById("room-" + pid); }
+  function clearWelcome(pid) { roomEl(pid).querySelector(".welcome")?.remove(); }
+  function scrollRoom(pid) {
+    const r = roomEl(pid);
+    if (r.classList.contains("active")) r.scrollTop = r.scrollHeight;
+  }
+
+  function addUserBubble(pid, text) {
+    clearWelcome(pid);
+    const p = PERSONAS.find(x => x.id === pid);
+    const div = document.createElement("div");
+    div.className = "msg user";
+    div.innerHTML = `
+      <div class="msg-avatar" style="background:var(--surface2)">K</div>
+      <div class="bubble bubble-user">${escHtml(text)}</div>`;
+    roomEl(pid).appendChild(div);
+    scrollRoom(pid);
+  }
+
+  function addAgentRow(pid) {
+    clearWelcome(pid);
+    const p = PERSONAS.find(x => x.id === pid);
+    const div = document.createElement("div");
+    div.className = "msg agent";
+    div.innerHTML = `
+      <div class="msg-avatar" style="background:${p.color}">${p.initial}</div>
+      <div class="msg-body"></div>`;
+    roomEl(pid).appendChild(div);
+    scrollRoom(pid);
+    return div.querySelector(".msg-body");
+  }
+
+  function showTyping(pid) {
+    clearWelcome(pid);
+    const p = PERSONAS.find(x => x.id === pid);
+    const el = document.createElement("div");
+    el.className = "typing-row";
+    el.id = "typing-" + pid;
+    el.innerHTML = `
+      <div class="msg-avatar" style="background:${p.color}">${p.initial}</div>
+      <div class="typing-bubble">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <span class="typing-label">${escHtml(p.name)} sedang berpikir…</span>
+      </div>`;
+    roomEl(pid).appendChild(el);
+    scrollRoom(pid);
+  }
+  function hideTyping(pid) { document.getElementById("typing-" + pid)?.remove(); }
+
+  function renderThink(pid, body, content) {
+    const el = document.createElement("div");
+    el.className = "bubble-think";
+    el.title = "Klik untuk buka/tutup";
+    const preview = content.split("\n")[0].substring(0, 90) + (content.length > 90 ? "…" : "");
+    el.innerHTML = `
+      <div class="think-header">🧠 Berpikir</div>
+      <div class="think-preview">${escHtml(preview)}</div>
+      <div class="think-body">${escHtml(content)}</div>`;
+    el.addEventListener("click", () => el.classList.toggle("expanded"));
+    body.appendChild(el);
+    scrollRoom(pid);
+  }
+  function renderTalk(pid, body, content) {
+    const el = document.createElement("div");
+    el.className = "bubble bubble-talk";
+    el.innerHTML = escHtml(content);
+    body.appendChild(el);
+    scrollRoom(pid);
+  }
+  function renderDone(pid, body) {
+    const el = document.createElement("div");
+    el.className = "badge-done";
+    el.textContent = "✓ Selesai";
+    body.appendChild(el);
+    scrollRoom(pid);
+    if (current !== pid) document.getElementById("tab-" + pid).classList.add("has-unread");
+  }
+
+  // ── Send (SSE) ────────────────────────────────────────────
+  async function sendMessage() {
+    const pid = current;
+    if (busy[pid]) return;
+    const input = document.getElementById("input");
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    addUserBubble(pid, msg);
+    input.value = "";
+    autoResize(input);
+    busy[pid] = true;
+    if (current === pid) document.getElementById("sendBtn").disabled = true;
+    showTyping(pid);
+
+    let body = null;
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ persona_id: pid, session_id: sessionIds[pid], message: msg }),
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const parts = buf.split("\n\n");
+        buf = parts.pop();
+        for (const part of parts) {
+          const line = part.trim();
+          if (!line.startsWith("data:")) continue;
+          let evt;
+          try { evt = JSON.parse(line.slice(5).trim()); } catch { continue; }
+          if (!body && evt.type !== "END" && evt.type !== "error") {
+            hideTyping(pid);
+            body = addAgentRow(pid);
+          }
+          if (evt.type === "THINK") renderThink(pid, body, evt.content);
+          else if (evt.type === "TALK") renderTalk(pid, body, evt.content);
+          else if (evt.type === "DONE") renderDone(pid, body);
+          else if (evt.type === "error") {
+            hideTyping(pid);
+            if (!body) body = addAgentRow(pid);
+            renderTalk(pid, body, "Terjadi kesalahan. Coba lagi.");
+          }
+        }
+      }
+    } catch {
+      hideTyping(pid);
+      if (!body) body = addAgentRow(pid);
+      renderTalk(pid, body, "Koneksi ke server gagal. Pastikan server masih berjalan.");
+    } finally {
+      hideTyping(pid);
+      busy[pid] = false;
+      if (current === pid) {
+        document.getElementById("sendBtn").disabled = false;
+        document.getElementById("input").focus();
+      }
+    }
+  }
+
+  // ── Reset ─────────────────────────────────────────────────
+  async function resetRoom() {
+    const pid = current;
+    try {
+      await fetch("/api/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ persona_id: pid, session_id: sessionIds[pid] }),
+      });
+    } catch (_) {}
+    const p = PERSONAS.find(x => x.id === pid);
+    const room = roomEl(pid);
+    room.innerHTML = "";
+    room.appendChild(makeWelcome(p));
+    document.getElementById("input").focus();
+  }
+
+  // ── Helpers ───────────────────────────────────────────────
+  function useSuggestion(text) {
+    const input = document.getElementById("input");
+    input.value = text;
+    autoResize(input);
+    input.focus();
+  }
+  function handleKey(e) {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  }
+  function autoResize(el) {
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 140) + "px";
+  }
+  function escHtml(t) {
+    return String(t)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+      .replace(/\n/g,"<br>");
+  }
+
+  init();
+</script>
+</body>
+</html>
